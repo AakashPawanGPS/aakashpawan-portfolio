@@ -2,8 +2,9 @@ import React from "react";
 import HeroImage from "../assets/heroImage.jpg";
 import { MdOutlineKeyboardArrowRight } from "react-icons/md";
 import { Link } from "react-scroll";
+import Resume from '../assets/AakashPawanGPS_CV.pdf'
 
-const Home = () => {
+const Home = () => {  
   return (
     <div
       name="home"
@@ -31,7 +32,7 @@ const Home = () => {
               </span>
             </Link>
             <a
-              href="/files/AakashPawan_CV.pdf"
+              href={Resume}
               download
               smooth
               duration={500}
