@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#101827">
+<title>Badminton Six-Corner Reaction Trainer</title>
+<style>
+  :root { color-scheme: dark; --bg:#101827; --panel:#182437; --panel2:#202f45; --text:#f4f7fb; --muted:#a8b5c8; --accent:#78f0bd; --accent2:#55c9ff; --danger:#ff7d86; }
+  * { box-sizing:border-box; }
+  body { margin:0; min-height:100vh; background:radial-gradient(ellipse at top,#1d2d45 0%,var(--bg) 60%); color:var(--text); font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; padding:20px 14px max(22px, env(safe-area-inset-bottom)); }
+  main { width:min(720px,100%); margin:0 auto; }
+  header { text-align:center; margin:4px 0 18px; }
+  h1 { font-size:clamp(1.5rem,5vw,2.2rem); margin:0 0 7px; letter-spacing:-.04em; }
+  header p { color:var(--muted); margin:0; font-size:.95rem; }
+  .panel { background:rgba(24,36,55,.94); border:1px solid #31425a; border-radius:20px; padding:16px; box-shadow:0 12px 35px #0002; }
+  .settings { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .setting { background:var(--panel2); border-radius:14px; padding:12px; min-width:0; }
+  .setting label { display:block; color:var(--muted); font-size:.8rem; margin-bottom:9px; }
+  .stepper { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .stepper button { width:38px; height:38px; padding:0; font-size:1.3rem; border-radius:11px; }
+  .step-value { font-size:1.15rem; font-weight:750; min-width:48px; text-align:center; font-variant-numeric:tabular-nums; }
+  button { border:0; cursor:pointer; color:var(--text); background:#34465e; border-radius:12px; font:inherit; font-weight:700; min-height:42px; padding:10px 15px; touch-action:manipulation; }
+  button:focus-visible, input:focus-visible { outline:3px solid var(--accent2); outline-offset:3px; }
+  button:disabled { opacity:.42; cursor:not-allowed; }
+  .small-note { color:var(--muted); font-size:.75rem; margin-top:8px; }
+  .court-wrap { margin:16px 0 14px; }
+  .court { position:relative; width:100%; aspect-ratio:1.18/1; max-height:440px; min-height:270px; border-radius:18px; overflow:hidden; background:linear-gradient(145deg,#146b63,#0e514d); border:3px solid #e8fff7; box-shadow:inset 0 0 0 1px #ffffff33; }
+  .court:before { content:""; position:absolute; inset:9%; border:2px solid #ffffff9c; }
+  .court:after { content:""; position:absolute; left:50%; top:9%; bottom:9%; border-left:2px solid #ffffff9c; }
+  .horizontal { position:absolute; left:9%; right:9%; top:50%; border-top:2px solid #ffffff9c; }
+  .net { position:absolute; left:0; right:0; top:50%; border-top:4px solid #eafff7; opacity:.9; }
+  .direction { position:absolute; z-index:2; width:29%; height:31%; display:flex; align-items:center; justify-content:center; border:2px solid #ffffff70; border-radius:15px; background:#082f2b55; transition:background .12s,transform .12s,border-color .12s,box-shadow .12s; }
+  .direction svg { width:clamp(34px,9vw,62px); height:clamp(34px,9vw,62px); filter:drop-shadow(0 2px 3px #002a24); }
+  .direction.active { background:var(--accent); border-color:#fff; box-shadow:0 0 0 4px #78f0bd40,0 0 28px #78f0bd9c; transform:scale(1.04); }
+  .direction.active svg { color:#073c32; filter:none; }
+  .direction:not(.active) svg { color:#effffb; }
+  .tl { left:4%; top:4%; } .tr { right:4%; top:4%; }
+  .l { left:4%; top:35%; } .r { right:4%; top:35%; }
+  .bl { left:4%; bottom:4%; } .br { right:4%; bottom:4%; }
+  .stats { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px; }
+  .stat { background:var(--panel2); padding:12px; border-radius:13px; text-align:center; }
+  .stat-label { color:var(--muted); font-size:.76rem; }
+  .stat-value { font-size:1.5rem; font-weight:800; margin-top:3px; font-variant-numeric:tabular-nums; }
+  .controls { display:flex; gap:10px; margin-top:14px; }
+  .controls button { flex:1; min-height:50px; }
+  #startBtn { background:var(--accent); color:#092f28; }
+  #resetBtn { background:#34465e; }
+  .status { text-align:center; color:var(--muted); min-height:24px; margin:12px 0 0; font-size:.9rem; }
+  .tip { margin:14px 2px 0; color:var(--muted); font-size:.82rem; line-height:1.5; }
+  @media (max-width:420px) { body { padding:14px 10px max(16px,env(safe-area-inset-bottom)); } .panel { padding:12px; } .setting { padding:10px; } .stepper button { width:34px;height:36px; } .court { min-height:260px; } .direction { width:30%; height:30%; } }
+  @media (prefers-reduced-motion:reduce) { *,*::before,*::after { transition:none !important; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Six-Corner Reaction Trainer</h1>
+    <p>Badminton footwork • React to the highlighted corner</p>
+  </header>
+
+  <section class="panel" aria-label="Training controls">
+    <div class="settings">
+      <div class="setting">
+        <label>Time between directions</label>
+        <div class="stepper">
+          <button id="intervalMinus" aria-label="Decrease interval by half a second">−</button>
+          <span class="step-value" id="intervalValue">2.0 s</span>
+          <button id="intervalPlus" aria-label="Increase interval by half a second">+</button>
+        </div>
+        <div class="small-note">Adjust in 0.5-second steps</div>
+      </div>
+      <div class="setting">
+        <label>Training round</label>
+        <div class="stepper">
+          <button id="durationMinus" aria-label="Decrease round duration by five seconds">−</button>
+          <span class="step-value" id="durationValue">30 s</span>
+          <button id="durationPlus" aria-label="Increase round duration by five seconds">+</button>
+        </div>
+        <div class="small-note">30 seconds by default · 5-second steps</div>
+      </div>
+    </div>
+
+    <div class="court-wrap">
+      <div class="court" id="court" role="img" aria-label="Six badminton movement directions">
+        <div class="horizontal"></div><div class="net"></div>
+        <div class="direction tl" data-direction="Top left" aria-label="Top left">
+          <svg viewBox="0 0 64 64" fill="none" aria-hidden="true"><path d="M47 47L17 17M17 17H39M17 17V39" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="direction tr" data-direction="Top right" aria-label="Top right">
+          <svg viewBox="0 0 64 64" fill="none" aria-hidden="true"><path d="M17 47L47 17M47 17H25M47 17V39" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="direction l" data-direction="Left" aria-label="Left">
+          <svg viewBox="0 0 64 64" fill="none" aria-hidden="true"><path d="M50 32H14M14 32L31 15M14 32L31 49" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="direction r" data-direction="Right" aria-label="Right">
+          <svg viewBox="0 0 64 64" fill="none" aria-hidden="true"><path d="M14 32H50M50 32L33 15M50 32L33 49" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="direction bl" data-direction="Bottom left" aria-label="Bottom left">
+          <svg viewBox="0 0 64 64" fill="none" aria-hidden="true"><path d="M47 17L17 47M17 47H39M17 47V25" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="direction br" data-direction="Bottom right" aria-label="Bottom right">
+          <svg viewBox="0 0 64 64" fill="none" aria-hidden="true"><path d="M17 17L47 47M47 47H25M47 47V25" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="stat-label">Time remaining</div><div class="stat-value" id="remaining">30.0 s</div></div>
+      <div class="stat"><div class="stat-label">Directions shown</div><div class="stat-value" id="count">0</div></div>
+    </div>
+    <div class="controls">
+      <button id="startBtn">Start training</button>
+      <button id="resetBtn">Reset</button>
+    </div>
+    <p class="status" id="status" aria-live="polite">Ready when you are.</p>
+  </section>
+  <p class="tip">Start in your badminton ready stance. Move toward the lit corner, return to the centre, then wait for the next signal. Clear the surrounding area before you begin. This is a visual cue trainer, so use controlled footwork rather than diving or jumping on every cue.</p>
+</main>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const directions = [...document.querySelectorAll('.direction')];
+  const minInterval = 0.5, maxInterval = 10, intervalStep = 0.5;
+  const minDuration = 5, maxDuration = 300, durationStep = 5;
+  let interval = 2, duration = 30, remaining = duration, count = 0;
+  let running = false, intervalId = null, endAt = 0, nextAt = 0, lastIndex = -1;
+
+  const fmt = n => Number(n).toFixed(1);
+  function updateSettings() {
+    $('intervalValue').textContent = `${fmt(interval)} s`;
+    $('durationValue').textContent = `${duration} s`;
+    $('remaining').textContent = `${fmt(remaining)} s`;
+    $('count').textContent = count;
+    $('intervalMinus').disabled = running || interval <= minInterval;
+    $('intervalPlus').disabled = running || interval >= maxInterval;
+    $('durationMinus').disabled = running || duration <= minDuration;
+    $('durationPlus').disabled = running || duration >= maxDuration;
+  }
+  function clearHighlight() { directions.forEach(el => el.classList.remove('active')); }
+  function showNext() {
+    let index;
+    do { index = Math.floor(Math.random() * directions.length); } while (index === lastIndex && directions.length > 1);
+    lastIndex = index;
+    clearHighlight();
+    directions[index].classList.add('active');
+    count++;
+    $('count').textContent = count;
+  }
+  function stopTraining(message) {
+    running = false;
+    if (intervalId !== null) clearInterval(intervalId);
+    intervalId = null;
+    clearHighlight();
+    $('startBtn').textContent = 'Start training';
+    $('status').textContent = message;
+    updateSettings();
+  }
+  function tick() {
+    const now = performance.now();
+    remaining = Math.max(0, (endAt - now) / 1000);
+    $('remaining').textContent = `${fmt(remaining)} s`;
+    if (now >= endAt) {
+      remaining = 0;
+      $('remaining').textContent = '0.0 s';
+      stopTraining(`Round complete! You reacted to ${count} directions.`);
+      return;
+    }
+    if (now >= nextAt) {
+      showNext();
+      nextAt = now + interval * 1000;
+    }
+  }
+  function startTraining() {
+    if (running) {
+      stopTraining('Paused. Tap Start training to begin a new round.');
+      remaining = duration;
+      count = 0;
+      $('remaining').textContent = `${fmt(remaining)} s`;
+      $('count').textContent = count;
+      return;
+    }
+    remaining = duration;
+    count = 0;
+    lastIndex = -1;
+    running = true;
+    endAt = performance.now() + duration * 1000;
+    nextAt = performance.now();
+    $('status').textContent = 'Go! Move to the highlighted corner and recover to centre.';
+    $('startBtn').textContent = 'Stop round';
+    updateSettings();
+    tick();
+    intervalId = setInterval(tick, 50);
+  }
+  $('intervalMinus').addEventListener('click', () => { if (!running) interval = Math.max(minInterval, Math.round((interval - intervalStep) * 10) / 10); updateSettings(); });
+  $('intervalPlus').addEventListener('click', () => { if (!running) interval = Math.min(maxInterval, Math.round((interval + intervalStep) * 10) / 10); updateSettings(); });
+  $('durationMinus').addEventListener('click', () => { if (!running) duration = Math.max(minDuration, duration - durationStep); remaining = duration; updateSettings(); });
+  $('durationPlus').addEventListener('click', () => { if (!running) duration = Math.min(maxDuration, duration + durationStep); remaining = duration; updateSettings(); });
+  $('startBtn').addEventListener('click', startTraining);
+  $('resetBtn').addEventListener('click', () => {
+    stopTraining('Reset. Ready when you are.');
+    remaining = duration;
+    count = 0;
+    lastIndex = -1;
+    $('count').textContent = '0';
+    $('remaining').textContent = `${fmt(remaining)} s`;
+    $('startBtn').textContent = 'Start training';
+    updateSettings();
+  });
+  updateSettings();
+})();
+</script>
+</body>
+</html>
